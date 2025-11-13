@@ -1,34 +1,55 @@
-const users = [
-  { id: 1, name: "Alice" },
-  { id: 2, name: "Bob" },
-  { id: 3, name: "Charlie" },
-  { id: 4, name: "Dave" },
-];
+import * as userService from '../services/userServices.js';
 
-// Get all users
+
 export const getAllUsers = (req, res) => {
-  res.json(users);
-};
-
-// Get single user
-export const getUserById = (req, res) => {
-  const { id } = req.params;
-  const user = users.find(u => u.id === parseInt(id));
-
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+  try {
+    const users = userService.getAllUsers();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-
-  res.json(user);
 };
 
-// Create a new user
-export const createUser = (req, res) => {
-  const newUser = {
-    id: users.length + 1,
-    name: req.body.name,
-  };
+export const getUserById = (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = userService.getUserById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-  users.push(newUser);
-  res.status(201).json(newUser);
+export const createUser = (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ message: "Name is required" });
+    const newUser = userService.createUser({ name });
+    res.status(201).json(newUser);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateUser = (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedUser = userService.updateUser(id, req.body);
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteUser = (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = userService.deleteUser(id);
+    if (!deleted) return res.status(404).json({ message: "User not found" });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
