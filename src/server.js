@@ -25,6 +25,7 @@ app.use(async (req, res, next) => {
 	
 	next()
 })
+
 app.get("/", (req, res) => {
 	const data = req.data
 	res.json({ users, data })
