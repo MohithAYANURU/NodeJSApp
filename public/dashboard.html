@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>API Dashboard — Users / Books / Movies / Songs / Products / Events / Recipes</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220aa;
+    --glass:#0b122033;
+    --accent:#6ee7b7;
+    --muted:#97a0b5;
+    --glass-2: rgba(255,255,255,0.03);
+    --glass-border: rgba(255,255,255,0.06);
+    --glass-strong: rgba(255,255,255,0.08);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1000px 600px at -10% -10%, rgba(102,126,234,0.08), transparent 10%),
+      radial-gradient(800px 500px at 110% 110%, rgba(99,102,241,0.06), transparent 15%),
+      linear-gradient(180deg,#07111a 0%, var(--bg) 100%);
+    color:#e6eef6;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:28px;
+  }
+
+  .app {
+    max-width:1200px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .brand{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .logo{
+    width:56px;
+    height:56px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#6ee7b7,#60a5fa);
+    display:grid;
+    place-items:center;
+    color:#06202b;
+    font-weight:700;
+    box-shadow:0 6px 18px rgba(10,12,20,0.5);
+  }
+  h1{margin:0;font-size:20px;letter-spacing:0.2px}
+  p.lead{margin:0;color:var(--muted);font-size:13px}
+
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .api-key {
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    padding:8px 12px;
+    border-radius:10px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  nav.tabs{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+  .tab {
+    padding:10px 14px;
+    background:var(--glass-2);
+    border-radius:10px;
+    border:1px solid transparent;
+    cursor:pointer;
+    color:var(--muted);
+    font-weight:600;
+    font-size:14px;
+    transition:all .18s ease;
+  }
+  .tab.active{
+    background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    color:var(--accent);
+    border:1px solid var(--glass-strong);
+    box-shadow: 0 6px 20px rgba(10,12,20,0.45), inset 0 -3px 12px rgba(255,255,255,0.01);
+  }
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .left-tools{display:flex;gap:8px;align-items:center}
+  .search{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    padding:8px 12px;
+    border-radius:10px;
+    color:var(--muted);
+    min-width:220px;
+  }
+  .btn {
+    padding:9px 12px;
+    border-radius:10px;
+    background:linear-gradient(90deg,#111827,#0b1220);
+    border:1px solid var(--glass-border);
+    cursor:pointer;
+    color:#e6eef6;
+    font-weight:700;
+    letter-spacing:0.3px;
+    box-shadow:0 6px 18px rgba(2,6,23,0.5);
+  }
+  .btn.positive{background:linear-gradient(90deg,#0ea5a9,#60a5fa);color:#04121a}
+  .btn.ghost{background:transparent;border:1px dashed var(--glass-border);color:var(--muted)}
+  .info {
+    display:flex;
+    gap:12px;
+    color:var(--muted);
+    font-size:13px;
+    align-items:center;
+  }
+
+  main.content{
+    margin-top:18px;
+    display:grid;
+    gap:18px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill,minmax(260px,1fr));
+    gap:14px;
+  }
+
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid var(--glass-border);
+    border-radius:12px;
+    padding:14px;
+    box-shadow: 0 8px 20px rgba(2,8,20,0.45);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .card h3{margin:0;font-size:16px}
+  .meta{color:var(--muted);font-size:13px}
+  .card .actions{display:flex;gap:8px;margin-top:auto}
+  .small{font-size:12px;color:var(--muted)}
+
+  /* modal */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(2,6,20,0.55);
+    display:none;align-items:center;justify-content:center;z-index:90;
+  }
+  .modal{
+    min-width:320px;
+    max-width:720px;
+    background:linear-gradient(180deg,#071022, #0b1420);
+    border-radius:12px;padding:18px;border:1px solid var(--glass-border);
+    box-shadow:0 20px 60px rgba(2,9,22,0.6);
+  }
+  .modal header{display:flex;justify-content:space-between;align-items:center}
+  .modal form{display:grid;gap:10px;margin-top:12px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  label{font-size:13px;color:var(--muted)}
+  input[type="text"], input[type="number"], input[type="datetime-local"], textarea{
+    background:transparent;border:1px solid var(--glass-border);padding:8px;border-radius:8px;color:#e6eef6;
+  }
+  textarea{min-height:80px;resize:vertical}
+
+  footer.small{color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  @media (max-width:640px){
+    .brand h1{font-size:16px}
+    .search{min-width:140px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">AP</div>
+      <div>
+        <h1>API Playground</h1>
+        <p class="lead">Visual dashboard — Users, Books, Movies, Songs, Products, Events, Recipes</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="api-key" id="apiKeyBadge">API KEY: <span id="apiKeyMask">not-set</span></div>
+      <button class="btn ghost" id="setKeyBtn" title="Set API key">Set Key</button>
+      <button class="btn" id="refreshBtn" title="Refresh current tab">Refresh</button>
+      <button class="btn positive" id="createBtn" title="Create new record">+ New</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <div class="toolbar">
+    <div class="left-tools">
+      <input class="search" id="searchInput" placeholder="Search (title, name, etc.)" />
+      <select id="sortSelect" class="search">
+        <option value="">Sort</option>
+        <option value="id_asc">ID ↑</option>
+        <option value="id_desc">ID ↓</option>
+        <option value="alpha_asc">Alpha ↑</option>
+        <option value="alpha_desc">Alpha ↓</option>
+      </select>
+    </div>
+    <div class="info">
+      <div id="counts">—</div>
+      <div class="small" id="statusMsg">idle</div>
+    </div>
+  </div>
+
+  <main class="content">
+    <section id="view">
+      <div class="grid" id="grid"></div>
+    </section>
+  </main>
+
+  <footer class="small">
+    <div>Made for your NodeJSApp · Unique dashboard</div>
+    <div>Local API assumed at <code>http://localhost:3000</code></div>
+  </footer>
+</div>
+
+<!-- modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modal">
+    <header>
+      <strong id="modalTitle">New</strong>
+      <div><button class="btn ghost" id="closeModal">Close</button></div>
+    </header>
+    <form id="modalForm"></form>
+    <footer style="margin-top:10px;">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn ghost" id="modalCancel" type="button">Cancel</button>
+        <button class="btn positive" id="modalSave" type="button">Save</button>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<script>
+/*
+  Dashboard script
+  - Edit API_KEY to match your server's key
+  - If your server is on a different host/port, edit BASE_URL
+*/
+const API_KEY = ''; // <-- PUT YOUR API KEY string here (or click Set Key and paste)
+const BASE_URL = window.BASE_API_URL || 'http://localhost:3000';
+const HEADERS = () => {
+  const h = { 'Content-Type': 'application/json' };
+  if (API_KEY && API_KEY.length) h['x-api-key'] = API_KEY;
+  return h;
+};
+
+const resources = [
+  { id:'users', title:'Users', fields:[{k:'name',label:'Name',type:'text'}] },
+  { id:'books', title:'Books', fields:[
+      {k:'title',label:'Title',type:'text'},
+      {k:'author',label:'Author',type:'text'},
+      {k:'year',label:'Year',type:'number'},
+      {k:'genre',label:'Genre',type:'text'}
+    ] },
+  { id:'movies', title:'Movies', fields:[
+      {k:'title',label:'Title',type:'text'},
+      {k:'director',label:'Director',type:'text'},
+      {k:'year',label:'Year',type:'number'},
+      {k:'rating',label:'Rating',type:'number'}
+    ] },
+  { id:'songs', title:'Songs', fields:[
+      {k:'title',label:'Title',type:'text'},
+      {k:'artist',label:'Artist',type:'text'},
+      {k:'album',label:'Album',type:'text'},
+      {k:'duration',label:'Duration (e.g. 3:45)',type:'text'}
+    ] },
+  { id:'products', title:'Products', fields:[
+      {k:'name',label:'Name',type:'text'},
+      {k:'sku',label:'SKU',type:'text'},
+      {k:'price',label:'Price',type:'number'},
+      {k:'stock',label:'Stock',type:'number'},
+      {k:'description',label:'Description',type:'text'}
+    ] },
+  { id:'events', title:'Events', fields:[
+      {k:'title',label:'Title',type:'text'},
+      {k:'description',label:'Description',type:'text'},
+      {k:'location',label:'Location',type:'text'},
+      {k:'start_at',label:'Start (ISO / datetime-local)',type:'datetime'},
+      {k:'end_at',label:'End (ISO / datetime-local)',type:'datetime'}
+    ] },
+  { id:'recipes', title:'Recipes', fields:[
+      {k:'title',label:'Title',type:'text'},
+      {k:'instructions',label:'Instructions',type:'text'},
+      {k:'ingredients',label:'Ingredients (JSON array)',type:'text'}
+    ] }
+];
+
+let active = resources[0].id;
+let cache = {}; // store fetched arrays
+
+// UI elements
+const tabsEl = document.getElementById('tabs');
+const gridEl = document.getElementById('grid');
+const searchEl = document.getElementById('searchInput');
+const sortEl = document.getElementById('sortSelect');
+const countsEl = document.getElementById('counts');
+const statusEl = document.getElementById('statusMsg');
+const refreshBtn = document.getElementById('refreshBtn');
+const createBtn = document.getElementById('createBtn');
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modalTitle');
+const modalForm = document.getElementById('modalForm');
+const modalSave = document.getElementById('modalSave');
+const modalCancel = document.getElementById('modalCancel');
+const closeModal = document.getElementById('closeModal');
+const setKeyBtn = document.getElementById('setKeyBtn');
+const apiKeyMask = document.getElementById('apiKeyMask');
+const apiKeyBadge = document.getElementById('apiKeyBadge');
+
+function setStatus(txt){ statusEl.textContent = txt; }
+
+function updateApiKeyDisplay(){
+  apiKeyMask.textContent = API_KEY ? (API_KEY.slice(0,4)+'…'+API_KEY.slice(-4)) : 'not-set';
+}
+updateApiKeyDisplay();
+
+setKeyBtn.addEventListener('click', ()=>{
+  const val = prompt('Paste your API key (will be used for X-API-Key header):', API_KEY || '');
+  if (val !== null) {
+    // NOTE: script uses the constant above; reloading the page doesn't change const.
+    // We'll store key in session storage for convenience.
+    sessionStorage.setItem('apiKey', val);
+    location.reload();
+  }
+});
+
+// load API key from sessionStorage override (convenience)
+(function(){
+  const k = sessionStorage.getItem('apiKey');
+  if (k) {
+    // reassign HEADERS factory by creating a new global var — we'll use stored key below by overriding fetch headers
+    window._DASH_API_KEY = k;
+    apiKeyMask.textContent = k.slice(0,4)+'…'+k.slice(-4);
+  }
+})();
+
+function headersWithKey(){
+  const k = window._DASH_API_KEY || API_KEY;
+  const h = { 'Content-Type': 'application/json' };
+  if (k) h['x-api-key'] = k;
+  return h;
+}
+
+function buildTabs(){
+  tabsEl.innerHTML = '';
+  resources.forEach(r=>{
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (r.id===active ? ' active': '');
+    btn.textContent = r.title;
+    btn.onclick = ()=>{
+      active = r.id;
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      btn.classList.add('active');
+      loadActive();
+    };
+    tabsEl.appendChild(btn);
+  });
+}
+
+async function fetchResource(id){
+  setStatus('loading '+id+'...');
+  try {
+    const res = await fetch(`${BASE_URL}/${id}`, { headers: headersWithKey() });
+    if (!res.ok) {
+      const msg = await res.text()
+      throw new Error(res.status + ' ' + (msg || res.statusText));
+    }
+    const data = await res.json();
+    cache[id] = Array.isArray(data) ? data : [data];
+    setStatus('loaded');
+    return cache[id];
+  } catch (err) {
+    setStatus('error: ' + err.message);
+    cache[id] = [];
+    return [];
+  }
+}
+
+function renderCards(items){
+  gridEl.innerHTML = '';
+  if (!items || items.length===0) {
+    gridEl.innerHTML = `<div class="card"><div class="small">No items</div></div>`;
+    countsEl.textContent = '0 items';
+    return;
+  }
+  countsEl.textContent = items.length + ' items';
+  items.forEach(it=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    const title = document.createElement('h3');
+    title.textContent = it.name || it.title || (it.email? it.email : 'Item #' + (it.id||''));
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    // build details depending on active
+    let html = '';
+    switch(active){
+      case 'users':
+        html += `<div class="small">id: ${it.id}</div><div class="small">name: ${it.name}</div>`;
+        break;
+      case 'books':
+        html += `<div class="small">${it.author} · ${it.year || ''}</div><div class="small">${it.genre||''}</div>`;
+        break;
+      case 'movies':
+        html += `<div class="small">${it.director} · ${it.year || ''}</div><div class="small">rating: ${it.rating||'—'}</div>`;
+        break;
+      case 'songs':
+        html += `<div class="small">${it.artist} · ${it.album||''}</div><div class="small">duration: ${it.duration||''}</div>`;
+        break;
+      case 'products':
+        html += `<div class="small">SKU: ${it.sku||'—'} · $${it.price?.toFixed? it.price.toFixed(2) : it.price}</div><div class="small">Stock: ${it.stock||0}</div>`;
+        break;
+      case 'events':
+        html += `<div class="small">${it.location||''}</div><div class="small">Start: ${it.start_at || '—'}</div>`;
+        break;
+      case 'recipes':
+        html += `<div class="small">${(it.ingredients||[]).length} ingredients</div><div class="small">created: ${it.created_at||''}</div>`;
+        break;
+      default:
+        html += `<div class="small">${JSON.stringify(it)}</div>`;
+    }
+    meta.innerHTML = html;
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const viewBtn = document.createElement('button'); viewBtn.className='btn ghost'; viewBtn.textContent='View';
+    viewBtn.onclick = ()=> openModal('view', it);
+
+    const editBtn = document.createElement('button'); editBtn.className='btn'; editBtn.textContent='Edit';
+    editBtn.onclick = ()=> openModal('edit', it);
+
+    const delBtn = document.createElement('button'); delBtn.className='btn ghost'; delBtn.textContent='Delete';
+    delBtn.onclick = ()=> doDelete(it);
+
+    actions.appendChild(viewBtn);
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+
+    card.appendChild(title);
+    card.appendChild(meta);
+
+    // recipe special: list ingredients
+    if (active==='recipes' && it.ingredients && it.ingredients.length){
+      const ul = document.createElement('ul'); ul.style.margin='6px 0 0 14px';
+      it.ingredients.forEach(ing=>{
+        const li = document.createElement('li'); li.className='small'; li.textContent = ing.name + (ing.quantity? ' — '+ing.quantity : '');
+        ul.appendChild(li);
+      });
+      card.appendChild(ul);
+    }
+
+    card.appendChild(actions);
+    gridEl.appendChild(card);
+  });
+}
+
+function applySearchSort(list){
+  const q = searchEl.value.trim().toLowerCase();
+  let filtered = list.filter(it=>{
+    if (!q) return true;
+    // search some common fields
+    return (it.name && it.name.toLowerCase().includes(q))
+      || (it.title && it.title.toLowerCase().includes(q))
+      || (it.author && it.author.toLowerCase().includes(q))
+      || (it.director && it.director.toLowerCase().includes(q))
+      || (it.email && it.email.toLowerCase().includes(q))
+      || (it.artist && it.artist.toLowerCase().includes(q));
+  });
+  const s = sortEl.value;
+  if (s){
+    if (s==='id_asc') filtered.sort((a,b)=> (a.id||0)-(b.id||0));
+    if (s==='id_desc') filtered.sort((a,b)=> (b.id||0)-(a.id||0));
+    if (s==='alpha_asc') filtered.sort((a,b)=> ( (a.name||a.title||'').localeCompare(b.name||b.title||'') ));
+    if (s==='alpha_desc') filtered.sort((a,b)=> ( (b.name||b.title||'').localeCompare(a.name||a.title||'') ));
+  }
+  return filtered;
+}
+
+async function loadActive(force=false){
+  buildTabs();
+  const id = active;
+  setStatus('loading '+id);
+  let list = cache[id];
+  if (!list || force){
+    list = await fetchResource(id);
+  }
+  const filtered = applySearchSort(list);
+  renderCards(filtered);
+}
+
+refreshBtn.addEventListener('click', ()=> loadActive(true));
+searchEl.addEventListener('input', ()=> loadActive());
+sortEl.addEventListener('change', ()=> loadActive());
+
+createBtn.addEventListener('click', ()=> openModal('create'));
+
+function openModal(mode, item){
+  // mode: create / edit / view
+  modalBackdrop.style.display = 'flex';
+  modalTitle.textContent = (mode === 'create' ? 'Create new ' : mode === 'edit' ? 'Edit ' + (item.name || item.title || '') : 'View ' + (item.name || item.title || ''));
+  modalForm.innerHTML = '';
+
+  const res = resources.find(r=> r.id===active);
+  if (!res) return;
+  if (mode === 'view'){
+    // show read-only details
+    const wrapper = document.createElement('div');
+    for (const k in item){
+      const row = document.createElement('div'); row.style.marginBottom='6px';
+      const label = document.createElement('div'); label.className='small'; label.textContent = k;
+      const val = document.createElement('pre'); val.style.margin='3px 0 0 0'; val.style.whiteSpace='pre-wrap'; val.style.fontSize='13px'; val.textContent = JSON.stringify(item[k], null, 2);
+      row.appendChild(label); row.appendChild(val);
+      wrapper.appendChild(row);
+    }
+    modalForm.appendChild(wrapper);
+    modalSave.style.display = 'none';
+  } else {
+    // create form fields
+    res.fields.forEach(f=>{
+      const fld = document.createElement('div'); fld.className='field';
+      const label = document.createElement('label'); label.textContent = f.label || f.k;
+      let input;
+      if (f.type === 'text' || f.type === 'datetime') {
+        input = document.createElement('input');
+        input.type = f.type === 'datetime' ? 'datetime-local' : 'text';
+      } else if (f.type === 'number') {
+        input = document.createElement('input'); input.type='number';
+      } else {
+        input = document.createElement('input'); input.type='text';
+      }
+      input.name = f.k;
+      input.value = (item && item[f.k] !== undefined && item[f.k] !== null) ? item[f.k] : '';
+      fld.appendChild(label); fld.appendChild(input);
+      modalForm.appendChild(fld);
+    });
+
+    // special: recipes ingredients input hint
+    if (active === 'recipes'){
+      const hint = document.createElement('div'); hint.className='small'; hint.style.color='var(--muted)'; hint.textContent = 'Ingredients: provide JSON array like [{"name":"Flour","quantity":"200g"}]';
+      modalForm.appendChild(hint);
+    }
+
+    modalSave.style.display = 'inline-block';
+  }
+
+  // save handlers
+  modalSave.onclick = async ()=>{
+    const formData = new FormData(modalForm);
+    const payload = {};
+    for (const pair of formData.entries()){
+      const [k,v] = pair;
+      payload[k] = v;
+    }
+    // convert numeric fields for products, year, rating, stock, price
+    if (active ==='books'){
+      if (payload.year) payload.year = parseInt(payload.year,10);
+    }
+    if (active ==='movies'){
+      if (payload.year) payload.year = parseInt(payload.year,10);
+      if (payload.rating) payload.rating = parseFloat(payload.rating);
+    }
+    if (active==='products'){
+      if (payload.price) payload.price = parseFloat(payload.price);
+      if (payload.stock) payload.stock = parseInt(payload.stock,10);
+    }
+    if (active==='recipes'){
+      if (payload.ingredients && typeof payload.ingredients === 'string') {
+        try { payload.ingredients = JSON.parse(payload.ingredients) } catch(e){ alert('Invalid ingredients JSON'); return; }
+      }
+    }
+    try {
+      if (mode==='create'){
+        const r = await fetch(`${BASE_URL}/${active}`, {
+          method:'POST', headers: headersWithKey(), body: JSON.stringify(payload)
+        });
+        if (!r.ok) throw new Error(await r.text());
+        await loadActive(true);
+        closeModalFn();
+      } else if (mode==='edit'){
+        const r = await fetch(`${BASE_URL}/${active}/${item.id}`, {
+          method:'PUT', headers: headersWithKey(), body: JSON.stringify(payload)
+        });
+        if (!r.ok) throw new Error(await r.text());
+        await loadActive(true);
+        closeModalFn();
+      }
+    } catch(err){
+      alert('Error: ' + err.message);
+    }
+  };
+
+  modalCancel.onclick = closeModalFn;
+  closeModal.onclick = closeModalFn;
+}
+
+function closeModalFn(){
+  modalBackdrop.style.display = 'none';
+}
+
+async function doDelete(item){
+  if (!confirm('Delete item?')) return;
+  try {
+    const r = await fetch(`${BASE_URL}/${active}/${item.id}`, { method:'DELETE', headers: headersWithKey() });
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error(txt || r.statusText);
+    }
+    await loadActive(true);
+  } catch(e){
+    alert('Delete failed: ' + e.message);
+  }
+}
+
+// init
+buildTabs();
+loadActive();
+setInterval(()=>{ /* optional: auto-refresh */ }, 0);
+</script>
+</body>
+</html>

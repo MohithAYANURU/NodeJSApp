@@ -1,26 +1,58 @@
-let users = [
-  { id: 1, name: "Alice" },
-  { id: 2, name: "Bob" },
-  { id: 3, name: "Charlie" },
-  { id: 4, name: "Dave" },
-];
+import User from '../models/User.js'
 
-export const getAllUsers = () => users;
-export const getUserById = (id) => users.find(user => user.id === parseInt(id));
+// Get all users
+export const getAllUsers = () => {
+	return User.findAll()
+}
+
+// Get user by ID
+export const getUserById = (id) => {
+	return User.findById(id)
+}
+
+// Create new user
 export const createUser = (userData) => {
-  const newUser = { id: users.length + 1, name: userData.name };
-  users.push(newUser);
-  return newUser;
-};
+	const { name, email } = userData
+	
+	// Business logic: Check if email already exists
+	if (email && User.emailExists(email)) {
+		throw new Error('Email already exists')
+	}
+	
+	// Additional business logic could go here
+	// e.g., send welcome email, log user creation, etc.
+	
+	return User.create({ name, email })
+}
+
+// Update user
 export const updateUser = (id, userData) => {
-  const index = users.findIndex(u => u.id === parseInt(id));
-  if (index === -1) return null;
-  users[index] = { ...users[index], ...userData };
-  return users[index];
-};
+	const { name, email } = userData
+	
+	// Check if user exists
+	const existingUser = User.findById(id)
+	if (!existingUser) {
+		return null
+	}
+	
+	// Business logic: Check if new email conflicts
+	if (email && email !== existingUser.email && User.emailExists(email, id)) {
+		throw new Error('Email already exists')
+	}
+	
+	return User.update(id, { name, email })
+}
+
+// Delete user
 export const deleteUser = (id) => {
-  const index = users.findIndex(u => u.id === parseInt(id));
-  if (index === -1) return false;
-  users.splice(index, 1);
-  return true;
-};
+	return User.delete(id)
+}
+
+// Additional service methods with business logic
+export const getUserByEmail = (email) => {
+	return User.findByEmail(email)
+}
+
+export const getUserCount = () => {
+	return User.count()
+}
